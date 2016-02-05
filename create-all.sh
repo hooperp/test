@@ -6,6 +6,13 @@ AMI_ID=ami-443a8d37
 INSTANCE_TYPE=t1.micro
 KEY_NAME=phooper-xps13
 
+if [ -x ./delete-all.sh ] ; then 
+    ./delete-all.sh 
+else 
+    echo "No delete script present [ ./delete-all.sh ]. Exiting"
+    exit 1 
+fi
+
 # -----------------------------------------------------------------------------------------------------------------------------------------
 
 echo "Creating VPC"
