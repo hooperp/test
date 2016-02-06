@@ -6,6 +6,11 @@ AMI_ID=ami-443a8d37
 INSTANCE_TYPE=t1.micro
 KEY_NAME=phooper-xps13
 
+# Delete hostnames 
+sudo sed -i '/cidb01/d' /etc/hosts 2>/dev/null
+sudo sed -i '/ciweb01/d' /etc/hosts 2>/dev/null
+sudo sed -i '/ciapp01/d' /etc/hosts 2>/dev/null
+
 # Deleting CI tenant
 VPC_ID=$(aws ec2 describe-vpcs --filters Name=tag:Name,Values=vpcOrchestra  --output json| grep VpcId | sed -e 's!",!!g' -e 's!^.*\"!!g' -e 's!",!!g')
 
@@ -28,7 +33,7 @@ do
 
     if [ "$NACL_ID" ] ; then 
         echo "DELETING NACL"
-        aws ec2 delete-network-acl --network-acl-id  $NACL_ID
+        aws ec2 delete-network-acl --network-acl-id  $NACL_ID >/dev/null 2>&1
     fi
 
     echo "DELETING SUBNET"
@@ -39,7 +44,7 @@ done
 for RouteTableId in $(aws ec2 describe-route-tables  | grep $VPC_ID |  awk ' { print $2 } ')
 do
     echo "DELETING ROUTE TABLE"
-    aws ec2 delete-route-table --route-table-id $RouteTableId
+    aws ec2 delete-route-table --route-table-id $RouteTableId >/dev/null 2>&1
 done
 
 for SecurityGroupId in $(aws ec2 describe-security-groups  | grep $VPC_ID | grep -v "default" | awk ' { print $6 } ')

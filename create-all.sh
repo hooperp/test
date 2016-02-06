@@ -19,6 +19,7 @@ echo "Creating VPC"
 # Create VPC and name it
 VPC_ID=`aws ec2 create-vpc --cidr-block 10.0.0.0/16 --query 'Vpc.VpcId' --output text`
 aws ec2 create-tags --resources $VPC_ID --tags Key=Name,Value=vpcOrchestra
+aws ec2 modify-vpc-attribute --vpc-id $VPC_ID --enable-dns-hostname "{\"Value\":true}"
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -80,11 +81,29 @@ aws ec2 authorize-security-group-egress --group-id $DB_SECURITY_GROUP_ID --proto
 echo "Building servers"
 DMZ_INSTANCE_ID=$(aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type $INSTANCE_TYPE --key-name $KEY_NAME --security-group-ids $DMZ_SECURITY_GROUP_ID --subnet-id $DMZ_SUBNET_ID --query 'Instances[*].InstanceId' --private-ip-address 10.0.1.10 --associate-public-ip-address)
 aws ec2 create-tags --resources $DMZ_INSTANCE_ID --tags Key=Name,Value=ciweb01
+sleep 10
+DMZ_PUBLIC_IP_ADDRESS=$(aws ec2 describe-instances --instance-ids $DMZ_INSTANCE_ID --query "Reservations[*].Instances[*].PublicIpAddress")
 
 APP_INSTANCE_ID=$(aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type $INSTANCE_TYPE --key-name $KEY_NAME --security-group-ids $APP_SECURITY_GROUP_ID --subnet-id $APP_SUBNET_ID --query 'Instances[*].InstanceId' --private-ip-address 10.0.2.10 --associate-public-ip-address)
 aws ec2 create-tags --resources $APP_INSTANCE_ID --tags Key=Name,Value=ciapp01
+sleep 10
+APP_PUBLIC_IP_ADDRESS=$(aws ec2 describe-instances --instance-ids $APP_INSTANCE_ID --query "Reservations[*].Instances[*].PublicIpAddress")
 
 DB_INSTANCE_ID=$(aws ec2 run-instances --image-id $AMI_ID --count 1 --instance-type $INSTANCE_TYPE --key-name $KEY_NAME --security-group-ids $DB_SECURITY_GROUP_ID --subnet-id $DB_SUBNET_ID --query 'Instances[*].InstanceId' --private-ip-address 10.0.3.10 --associate-public-ip-address)
 aws ec2 create-tags --resources $DB_INSTANCE_ID --tags Key=Name,Value=cidb01
+sleep 10
+DB_PUBLIC_IP_ADDRESS=$(aws ec2 describe-instances --instance-ids $DB_INSTANCE_ID --query "Reservations[*].Instances[*].PublicIpAddress")
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
+
+# Set up hosts file
+echo "Setting up DNS entries"
+
+echo "$DMZ_PUBLIC_IP_ADDRESS ciweb01"
+sudo su -c "echo \"$DMZ_PUBLIC_IP_ADDRESS ciweb01\" >> /etc/hosts"
+
+echo "$APP_PUBLIC_IP_ADDRESS ciapp01"
+sudo su -c "echo \"$APP_PUBLIC_IP_ADDRESS ciapp01\" >> /etc/hosts"
+
+echo "$DB_PUBLIC_IP_ADDRESS cidb01"
+sudo su -c "echo \"$DB_PUBLIC_IP_ADDRESS cidb01\" >> /etc/hosts"
