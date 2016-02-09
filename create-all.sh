@@ -6,10 +6,12 @@ AMI_ID=ami-97af1fe4
 INSTANCE_TYPE=t2.micro
 KEY_NAME=phooper-xps13
 
-if [ -x ./delete-all.sh ] ; then 
-    ./delete-all.sh 
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+
+if [ -x $SCRIPT_DIR/delete-all.sh ] ; then 
+    $SCRIPT_DIR/delete-all.sh 
 else 
-    echo "No delete script present [ ./delete-all.sh ]. Exiting"
+    echo "No delete script present [ $SCRIPT_DIR/delete-all.sh ]. Exiting"
     exit 1 
 fi
 
