@@ -1,0 +1,28 @@
+InstanceId=i-c786bc4a
+
+while ( true ) 
+do
+    if $(aws ec2 describe-instance-status --filters Name=instance-state-code,Values=16 --instance-ids $InstanceId | grep "[I]NSTANCESTATE	16	running" > /dev/null 2>&1) ; then 
+        echo "Instance IS running [ $InstanceId ] "
+        break
+    else 
+        echo "Instance IS NOT running [ $InstanceId ] "
+    fi
+    
+done
+
+InstanceId=i-bdd63537
+
+while ( true ) 
+do
+    if $(aws ec2 describe-instance-status --filters Name=instance-state-code,Values=16 --instance-ids $InstanceId | grep "[I]NSTANCESTATE	16	running" > /dev/null 2>&1) ; then 
+        echo "Instance IS running [ $InstanceId ] "
+        break
+    else 
+        echo "Instance IS NOT running [ $InstanceId ] "
+        sleep 5
+    fi
+    
+done
+    
+    

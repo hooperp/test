@@ -1,0 +1,47 @@
+#!/bin/sh
+#
+# This script will be executed *after* all the other init scripts.
+# You can put your own initialization stuff in here if you don't
+# want to do the full Sys V style init stuff.
+
+touch /var/lock/subsys/local
+
+# Read only access key
+export AWS_ACCESS_KEY_ID=AKIAIWNHLW6YKSCZZ6TA
+export AWS_SECRET_ACCESS_KEY=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
+export AWS_DEFAULT_REGION=eu-west-1
+export EC2_HOME=/opt/aws/apitools/ec2
+export JAVA_HOME=/usr/
+export PATH=$JAVA_HOME/bin:$EC2_HOME/bin:$PATH
+export Counter=1
+
+while [ $Counter -le 100 ]
+do
+    Hostname=$( ec2-describe-tags --aws-access-key $AWS_ACCESS_KEY_ID --aws-secret-key $AWS_SECRET_ACCESS_KEY --region $AWS_DEFAULT_REGION --filter "resource-type=instance" --filter "resource-id=$(ec2-metadata -i | cut -d ' ' -f2)" --filter "key=Name" | cut -f5)
+
+ IpAddress=$(curl http://169.254.169.254/latest/meta-data/local-ipv4 2>/dev/null )
+
+    [ "$Hostname" -a "$IpAddress" ] && break
+    sleep 5
+
+    Counter=$((Counter+1))
+
+done
+
+[ -z "$Hostname" -o -z "$IpAddress" ] &&  { echo "rc.local : Unable to set Hostname or Ip Address, exiting" ; exit 1 ; }
+
+# Perform each action only on initial boot
+if [ $(hostname) != "$Hostname" ] ; then
+    hostname $Hostname
+fi
+
+if ! $(grep "$Hostname" /etc/sysconfig/network >/dev/null 2>&1) ; then
+    sed -i "s!HOSTNAME=.*!HOSTNAME=$Hostname!g" /etc/sysconfig/network
+fi
+
+if ! $(grep "$Hostname" /etc/hosts  >/dev/null 2>&1) ; then
+    echo -e "$IpAddress\t$Hostname" >> /etc/hosts
+fi
+
+puppet agent
+

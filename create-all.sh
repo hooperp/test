@@ -2,8 +2,8 @@
 
 # This is very raw as is POC only 
 
-AMI_ID=ami-443a8d37
-INSTANCE_TYPE=t1.micro
+AMI_ID=ami-97af1fe4
+INSTANCE_TYPE=t2.micro
 KEY_NAME=phooper-xps13
 
 if [ -x ./delete-all.sh ] ; then 
@@ -107,3 +107,43 @@ sudo su -c "echo \"$APP_PUBLIC_IP_ADDRESS ciapp01\" >> /etc/hosts"
 
 echo "$DB_PUBLIC_IP_ADDRESS cidb01"
 sudo su -c "echo \"$DB_PUBLIC_IP_ADDRESS cidb01\" >> /etc/hosts"
+
+# Check instances are up and ready for use 
+
+while ( true )
+do
+    if $(aws ec2 describe-instance-status --filters Name=instance-state-code,Values=16 --instance-ids $DMZ_INSTANCE_ID | grep "INSTANCESTATE" | grep 16 | grep "running" >/dev/null 2>&1) ; then
+        echo "Instance IS running [ ciweb01 ] "
+        break
+    else
+        echo "Waiting for instance [ ciweb01 ] to come up"
+        sleep 5
+    fi
+   
+done
+
+while ( true )
+do
+    if $(aws ec2 describe-instance-status --filters Name=instance-state-code,Values=16 --instance-ids $APP_INSTANCE_ID | grep "INSTANCESTATE" | grep 16 | grep "running" >/dev/null 2>&1) ; then
+        echo "Instance IS running [ ciapp01 ] "
+        break
+    else
+        echo "Waiting for instance [ ciapp01 ] to come up"
+        sleep 5
+    fi
+
+done
+
+while ( true )
+do
+    if $(aws ec2 describe-instance-status --filters Name=instance-state-code,Values=16 --instance-ids $DB_INSTANCE_ID | grep "INSTANCESTATE" | grep 16 | grep "running" >/dev/null 2>&1) ; then
+        echo "Instance IS running [ cidb01 ] "
+        break
+    else
+        echo "Waiting for instance [ cidb01 ] to come up"
+        sleep 5
+    fi
+
+done
+
+

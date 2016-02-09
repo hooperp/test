@@ -2,10 +2,6 @@
 
 # This is very raw as is POC only 
 
-AMI_ID=ami-443a8d37
-INSTANCE_TYPE=t1.micro
-KEY_NAME=phooper-xps13
-
 # Delete hostnames 
 sudo sed -i '/cidb01/d' /etc/hosts 2>/dev/null
 sudo sed -i '/ciweb01/d' /etc/hosts 2>/dev/null
