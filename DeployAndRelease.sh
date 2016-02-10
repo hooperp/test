@@ -1,7 +1,15 @@
-Locations="Function ServiceDelivery"
 
 CurrentVersion=$(grep "<version>.*SNAPSHOT</version>" Function/pom.xml| sed -e 's!<version>!!g' -e 's!</version>!!g' | tr -d " ")
 CurrentVersionWithoutSnapshot=$(echo $CurrentVersion  | sed -e 's!-SNAPSHOT!!g')
+
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+
+if [ -x $SCRIPT_DIR/DeleteNexusRepos.sh ] ; then
+    $SCRIPT_DIR/DeleteNexusRepos.sh
+else
+    echo "No delete script present [ $SCRIPT_DIR/DeleteNexusRepos.sh ]. Exiting"
+    exit 1
+fi
 
 # Upload the SNAPSHOT version of the war and rpm to nexus - this is the current version as it's checked out of GIT 
 mvn -q -f Function/pom.xml deploy
